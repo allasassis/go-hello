@@ -43,15 +43,21 @@ func showMenu(command int) {
 }
 
 func startMonitoring() {
-	fmt.Println("Starting monitoring..")
-	site := "https://www.google.com"
+	var sites [4]string
+	sites[0] = "https://www.google.com"
+	sites[1] = "https://www.youtube.com/"
+	sites[2] = "https://twitter.com/home"
+	sites[3] = "https://www.twitch.tv/"
+	fmt.Println("Starting monitoring...")
 
 	// resp, error := http.Get(site)
-	resp, _ := http.Get(site)
-	// The _ indicates that you want to ignore that respective variable
-	if resp.StatusCode == 200 {
-		fmt.Println("Everything is fine with the website:", site)
-	} else {
-		fmt.Println("Unfortunately, the website ", site, "isn't working well, the status code is: ", resp.StatusCode)
+	for i := 0; i < len(sites); i++ {
+		resp, _ := http.Get(sites[i])
+		// The _ indicates that you want to ignore that respective variable
+		if resp.StatusCode == 200 {
+			fmt.Println("Everything is fine with the website:", sites[i])
+		} else {
+			fmt.Println("The website", sites[i], "isn't working well. The status code is:", resp.StatusCode)
+		}
 	}
 }

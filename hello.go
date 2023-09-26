@@ -1,13 +1,21 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
+	"strings"
+	"time"
 )
+
+const monitoring = 3
+const delay = 5
 
 func main() {
 	for {
+		fmt.Println("")
 		command := showIntroduction()
 		showMenu(command)
 	}
@@ -43,18 +51,58 @@ func showMenu(command int) {
 }
 
 func startMonitoring() {
-	sites := []string{"https://www.google.com", "https://www.youtube.com/", "https://twitter.com/home"}
-	sites = append(sites, "https://www.twitch.tv/")
+	// sites := []string{"https://www.google.com", "https://www.youtube.com/", "https://twitter.com/home"}
+	// sites = append(sites, "https://www.twitch.tv/")
 	fmt.Println("Starting monitoring...")
+	sites := readFile()
+	fmt.Println("THESE ARE THE WEBSITES !!")
+	fmt.Println(sites)
 
-	// resp, error := http.Get(site)
-	for i, site := range sites {
-		resp, _ := http.Get(site)
-		// The _ indicates that you want to ignore that respective variable
+	for i := 0; i < monitoring; i++ {
+		for _, site := range sites {
+			testSite(site)
+		}
+		// Pause the loop for 5 seconds before continuing.
+		time.Sleep(delay * time.Second)
+	}
+}
+
+func testSite(site string) {
+	resp, err := http.Get(site)
+
+	if err != nil {
+		fmt.Println("An error occurred:", err)
+	} else {
 		if resp.StatusCode == 200 {
-			fmt.Println("Everything is fine with the website:", sites[i])
+			fmt.Println("Everything is fine with the website:", site)
 		} else {
-			fmt.Println("The website", sites[i], "isn't working well. The status code is:", resp.Status)
+			fmt.Println("The website", site, "isn't working well. The status code is:", resp.Status)
 		}
 	}
+
+}
+
+func readFile() []string {
+	sites := []string{}
+	file, err := os.Open("sites.txt")
+	if err != nil {
+		fmt.Println("An error occurred:", err.Error())
+	}
+
+	reader := bufio.NewReader(file)
+	for {
+		line, err1 := reader.ReadString('\n')
+
+		if err1 != nil {
+			if err1 == io.EOF {
+				break
+			}
+			fmt.Println("An error occurred:", err1.Error())
+		}
+		line = strings.TrimSpace(line)
+		sites = append(sites, line)
+	}
+
+	file.Close()
+	return sites
 }

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -11,7 +12,7 @@ import (
 )
 
 const monitoring = 3
-const delay = 5
+const delay = 0
 
 func main() {
 	for {
@@ -41,6 +42,7 @@ func showMenu(command int) {
 		startMonitoring()
 	case 2:
 		fmt.Println("Showing logs...")
+		showLogs()
 	case 0:
 		fmt.Println("Exiting the program...")
 		os.Exit(0)
@@ -55,8 +57,6 @@ func startMonitoring() {
 	// sites = append(sites, "https://www.twitch.tv/")
 	fmt.Println("Starting monitoring...")
 	sites := readFile()
-	fmt.Println("THESE ARE THE WEBSITES !!")
-	fmt.Println(sites)
 
 	for i := 0; i < monitoring; i++ {
 		for _, site := range sites {
@@ -75,8 +75,10 @@ func testSite(site string) {
 	} else {
 		if resp.StatusCode == 200 {
 			fmt.Println("Everything is fine with the website:", site)
+			registerLog(site, true)
 		} else {
 			fmt.Println("The website", site, "isn't working well. The status code is:", resp.Status)
+			registerLog(site, false)
 		}
 	}
 
@@ -105,4 +107,32 @@ func readFile() []string {
 
 	file.Close()
 	return sites
+}
+
+func registerLog(site string, status bool) {
+	file, err := os.OpenFile("log.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+
+	if err != nil {
+		fmt.Println("An error occurred:", err)
+	}
+
+	time := time.Now().Format("02/01/2006 15:04:05")
+
+	if status {
+		file.WriteString(time + " " + site + " IS online\n")
+	} else {
+		file.WriteString(time + " " + site + " IS NOT online\n")
+	}
+
+	file.Close()
+}
+
+func showLogs() {
+	file, err := ioutil.ReadFile("log.txt")
+
+	if err != nil {
+		fmt.Println("An error occurred:", err)
+	}
+
+	fmt.Println(string(file))
 }
